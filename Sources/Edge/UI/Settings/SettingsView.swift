@@ -103,28 +103,32 @@ struct GestureTuningTab: View {
                             icon: preferences.swapSides ? "sun.max.fill" : "speaker.wave.2.fill",
                             color: preferences.swapSides ? .orange : .blue,
                             title: preferences.swapSides ? "Right Edge: Brightness ☀️" : "Right Edge: Volume 🔊",
-                            action: "Slide 1 finger up or down along the right edge of the trackpad glass."
+                            action: preferences.requireTwoFingerSlide
+                                ? "Swipe 2 fingers up or down along the right edge of the trackpad glass."
+                                : "Slide 1 or 2 fingers up or down along the right edge of the trackpad glass."
                         )
 
                         GestureGuideRow(
                             icon: preferences.swapSides ? "speaker.wave.2.fill" : "sun.max.fill",
                             color: preferences.swapSides ? .blue : .orange,
                             title: preferences.swapSides ? "Left Edge: Volume 🔊" : "Left Edge: Brightness ☀️",
-                            action: "Slide 1 finger up or down along the left edge of the trackpad glass."
+                            action: preferences.requireTwoFingerSlide
+                                ? "Swipe 2 fingers up or down along the left edge of the trackpad glass."
+                                : "Slide 1 or 2 fingers up or down along the left edge of the trackpad glass."
                         )
 
                         GestureGuideRow(
                             icon: "speaker.slash.fill",
                             color: .red,
                             title: "Top-Right Corner: Quick Mute 🔇",
-                            action: "Double-tap the top-right corner to instantly toggle mute/unmute."
+                            action: "Double-tap the top-right corner with 1 finger to instantly toggle mute/unmute."
                         )
 
                         GestureGuideRow(
                             icon: "playpause.fill",
                             color: .purple,
                             title: "Bottom Strip: Media Navigation ⏯",
-                            action: "Swipe 1 finger left/right along the bottom edge to skip tracks; double-tap to Play/Pause."
+                            action: "Swipe along bottom to skip tracks; double-tap with 1 finger to Play/Pause."
                         )
                     }
                     .padding(12)
@@ -139,10 +143,24 @@ struct GestureTuningTab: View {
                         Image(systemName: "hand.point.up.left.fill")
                             .font(.caption)
                             .foregroundColor(.blue)
-                        Text("Important: Use ONE finger right along the outer edge. Two fingers will scroll normally.")
+                        Text(preferences.requireTwoFingerSlide
+                            ? "Sliders require 2 fingers along the edge. Quick Mute is 1-finger double tap in the top-right corner."
+                            : "Sliders work with edge swipes. Quick Mute is a 1-finger double tap in the top-right corner.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                }
+
+                Divider()
+
+                // Slider Fingers Mode Toggle
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Require Two-Finger Swipe for Sliders", isOn: $preferences.requireTwoFingerSlide)
+                        .font(.headline)
+
+                    Text("Requires a 2-finger swipe along the left/right edge to adjust volume and brightness. Single-finger touch is reserved for standard cursor movement and 1-finger Quick Mute.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
                 Divider()

@@ -25,6 +25,7 @@ public final class Preferences: ObservableObject {
         public static let showOSD = "edge_showOSD"
         public static let enableHaptics = "edge_enableHaptics"
         public static let showMenuBarIcon = "edge_showMenuBarIcon"
+        public static let requireTwoFingerSlide = "edge_requireTwoFingerSlide"
     }
 
     private let defaults: UserDefaults
@@ -123,6 +124,13 @@ public final class Preferences: ObservableObject {
         }
     }
 
+    @Published public var requireTwoFingerSlide: Bool {
+        didSet {
+            defaults.set(requireTwoFingerSlide, forKey: Keys.requireTwoFingerSlide)
+            syncSnapshot()
+        }
+    }
+
     // MARK: - Open at Login (SMAppService Integration)
 
     /// Reflects whether Edge is currently registered to launch automatically at login.
@@ -159,7 +167,8 @@ public final class Preferences: ObservableObject {
             Keys.enableMagicMouse: false,
             Keys.showOSD: true,
             Keys.enableHaptics: true,
-            Keys.showMenuBarIcon: true
+            Keys.showMenuBarIcon: true,
+            Keys.requireTwoFingerSlide: true
         ])
 
         // 2. Load stored values (or registered defaults)
@@ -181,6 +190,7 @@ public final class Preferences: ObservableObject {
         self.showOSD = defaults.bool(forKey: Keys.showOSD)
         self.enableHaptics = defaults.bool(forKey: Keys.enableHaptics)
         self.showMenuBarIcon = defaults.object(forKey: Keys.showMenuBarIcon) as? Bool ?? true
+        self.requireTwoFingerSlide = defaults.object(forKey: Keys.requireTwoFingerSlide) as? Bool ?? true
 
         // 3. Update login item status
         refreshLaunchAtLoginStatus()
@@ -204,7 +214,8 @@ public final class Preferences: ObservableObject {
             enableMagicMouse: enableMagicMouse,
             showOSD: showOSD,
             enableHaptics: enableHaptics,
-            showMenuBarIcon: showMenuBarIcon
+            showMenuBarIcon: showMenuBarIcon,
+            requireTwoFingerSlide: requireTwoFingerSlide
         )
         holder.set(snapshot)
     }
@@ -228,6 +239,7 @@ public final class Preferences: ObservableObject {
         self.showOSD = def.showOSD
         self.enableHaptics = def.enableHaptics
         self.showMenuBarIcon = def.showMenuBarIcon
+        self.requireTwoFingerSlide = def.requireTwoFingerSlide
         syncSnapshot()
         StatusBarController.shared.setVisible(showMenuBarIcon)
     }

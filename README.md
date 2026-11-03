@@ -12,11 +12,12 @@ Built in 100% pure Swift & SwiftUI with zero third-party framework dependencies.
 
 ## Features
 
-- **Edge Sliding:**
-  - **Right Edge:** Smooth system volume adjustment with native OSD HUD feedback.
-  - **Left Edge:** Display brightness adjustment with native OSD HUD feedback.
+- **Two-Finger Edge Sliding:**
+  - **Right Edge:** Smooth system volume adjustment via a 2-finger swipe with native OSD HUD feedback.
+  - **Left Edge:** Display brightness adjustment via a 2-finger swipe with native OSD HUD feedback.
+  - **Accidental Touch Immunity:** 2-finger sliding ensures your regular single-finger mouse cursor navigation never accidentally modulates volume or brightness.
   - **Swappable Sides:** Invert volume and brightness edges with one click in Settings.
-- **Quick Mute:** Double-tap the top-right corner to instantly toggle mute and restore your prior audio volume level.
+- **Single-Finger Quick Mute:** Double-tap the top-right corner with 1 finger to instantly toggle mute and restore your prior audio volume level.
 - **Bottom Media Strip:**
   - **Swipe Left/Right:** Skip forward or backward across tracks in Apple Music, Spotify, YouTube, etc. (supports configurable Reverse Swipe).
   - **Double-Tap:** Instant Play / Pause toggle.

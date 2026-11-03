@@ -34,6 +34,7 @@ struct PreferencesTests {
         #expect(snapshot.showOSD)
         #expect(snapshot.enableHaptics)
         #expect(snapshot.showMenuBarIcon)
+        #expect(!snapshot.requireTwoFingerSlide)
 
         // Compatibility aliases
         #expect(abs(snapshot.edgeWidthFraction - 0.08) < 0.0001)
@@ -283,6 +284,7 @@ struct PreferencesTests {
         prefs.showOSD = false
         prefs.enableHaptics = false
         prefs.showMenuBarIcon = false
+        prefs.requireTwoFingerSlide = true
 
         // 1. Verify UserDefaults persistence
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.swapSides) == true)
@@ -295,6 +297,7 @@ struct PreferencesTests {
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.showOSD) == false)
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.enableHaptics) == false)
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.showMenuBarIcon) == false)
+        #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.requireTwoFingerSlide) == true)
 
         // 2. Verify Atomic snapshot synchronization
         let snapshot = holder.get()
@@ -308,6 +311,7 @@ struct PreferencesTests {
         #expect(snapshot.showOSD == false)
         #expect(snapshot.enableHaptics == false)
         #expect(snapshot.showMenuBarIcon == false)
+        #expect(snapshot.requireTwoFingerSlide == true)
     }
 
     @Test("Preferences clamping on property setters")

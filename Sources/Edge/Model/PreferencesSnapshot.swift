@@ -114,6 +114,9 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
     /// Controls whether the status bar icon is shown in the macOS menu bar.
     public var showMenuBarIcon: Bool
 
+    /// Requires a two-finger swipe along the edge to adjust volume and brightness.
+    public var requireTwoFingerSlide: Bool
+
     /// Default configuration matching the project specification.
     public static let `default` = PreferencesSnapshot(
         isEnabled: true,
@@ -126,7 +129,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         enableMagicMouse: false,
         showOSD: true,
         enableHaptics: true,
-        showMenuBarIcon: true
+        showMenuBarIcon: true,
+        requireTwoFingerSlide: false
     )
 
     /// Designated memberwise initializer with automated value clamping.
@@ -141,7 +145,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         enableMagicMouse: Bool = false,
         showOSD: Bool = true,
         enableHaptics: Bool = true,
-        showMenuBarIcon: Bool = true
+        showMenuBarIcon: Bool = true,
+        requireTwoFingerSlide: Bool = false
     ) {
         self.isEnabled = isEnabled
         self.swapSides = swapSides
@@ -154,6 +159,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         self.showOSD = showOSD
         self.enableHaptics = enableHaptics
         self.showMenuBarIcon = showMenuBarIcon
+        self.requireTwoFingerSlide = requireTwoFingerSlide
     }
 
     // MARK: - Compatibility Accessors
@@ -207,6 +213,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         case enableHaptics
         case hapticFeedbackEnabled
         case showMenuBarIcon
+        case requireTwoFingerSlide
     }
 
     public init(from decoder: Decoder) throws {
@@ -246,6 +253,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
             ?? true
 
         self.showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
+        self.requireTwoFingerSlide = try container.decodeIfPresent(Bool.self, forKey: .requireTwoFingerSlide) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -261,5 +269,6 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         try container.encode(showOSD, forKey: .showOSD)
         try container.encode(enableHaptics, forKey: .enableHaptics)
         try container.encode(showMenuBarIcon, forKey: .showMenuBarIcon)
+        try container.encode(requireTwoFingerSlide, forKey: .requireTwoFingerSlide)
     }
 }

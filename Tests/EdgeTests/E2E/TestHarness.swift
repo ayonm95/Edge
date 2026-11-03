@@ -38,6 +38,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
     public var enableMagicMouse: Bool
     public var showOSD: Bool
     public var enableHaptics: Bool
+    public var requireTwoFingerSlide: Bool
 
     public static let `default` = PreferencesSnapshot(
         swapSides: false,
@@ -48,7 +49,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         preciseSliding: false,
         enableMagicMouse: false,
         showOSD: true,
-        enableHaptics: true
+        enableHaptics: true,
+        requireTwoFingerSlide: false
     )
 
     public init(
@@ -60,7 +62,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         preciseSliding: Bool = false,
         enableMagicMouse: Bool = false,
         showOSD: Bool = true,
-        enableHaptics: Bool = true
+        enableHaptics: Bool = true,
+        requireTwoFingerSlide: Bool = false
     ) {
         self.swapSides = swapSides
         self.edgeWidth = min(max(edgeWidth, 0.03), 0.20)
@@ -71,6 +74,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         self.enableMagicMouse = enableMagicMouse
         self.showOSD = showOSD
         self.enableHaptics = enableHaptics
+        self.requireTwoFingerSlide = requireTwoFingerSlide
     }
 }
 
@@ -613,6 +617,7 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
     private var lastTapLocation: MTPoint?
     private var lastTapTime: Double = 0
     private var shiftOptionHeld: Bool = false
+    private var activeGestureFingerCount: Int = 1
 
     public init() {}
 
@@ -639,27 +644,18 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
             return true
         }
 
-        guard let touch = validTouches.first, validTouches.count == 1 else {
-            // Multi-touch or palm rejection: if more than 1 touch or empty
-            if validTouches.isEmpty {
-                if case .sliding = currentState {
-                    endCurrentGesture(cursorManager: cursorManager)
-                } else if case .candidate = currentState {
-                    currentState = .idle
-                }
-            } else if validTouches.count > 1 {
-                // Multi-finger touch: palm / pinch rejection on edge
-                if case .sliding = currentState {
-                    endCurrentGesture(cursorManager: cursorManager)
-                } else {
-                    currentState = .idle
-                }
+        // 0 Touches: Lift
+        if validTouches.isEmpty {
+            if case .sliding = currentState {
+                endCurrentGesture(cursorManager: cursorManager)
+            } else if case .candidate = currentState {
+                currentState = .idle
             }
             return
         }
 
-        // Palm rejection: large contact patch
-        if touch.majorRadius > 20.0 || touch.minorRadius > 20.0 {
+        // > 2 Touches: Multi-touch rejection (pinch, 3/4-finger gestures, large palm)
+        if validTouches.count > 2 {
             if case .sliding = currentState {
                 endCurrentGesture(cursorManager: cursorManager)
             }
@@ -667,64 +663,85 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
             return
         }
 
-        let p = touch.position
-        let edgeWidth = Float(preferences.edgeWidth)
+        // MARK: - 2 Touches: Two-Finger Edge Sliding
+        if validTouches.count == 2 {
+            let t1 = validTouches[0]
+            let t2 = validTouches[1]
 
-        switch touch.phase {
-        case .makeTouch, .startInRange:
-            // Identify starting edge zone
-            let edge = classifyEdge(point: p, edgeWidth: edgeWidth, activeArea: preferences.activeArea)
-            if edge != .none {
-                currentState = .candidate(edge: edge, startPoint: p, startTime: touch.timestamp)
-            } else {
+            // If we were in a 1-finger slide and a second finger arrived, cancel the 1-finger slide
+            if case .sliding = currentState, activeGestureFingerCount == 1 {
+                endCurrentGesture(cursorManager: cursorManager)
                 currentState = .idle
+                return
             }
 
-        case .touching:
+            // Palm rejection
+            if t1.majorRadius > 20.0 || t2.majorRadius > 20.0 || t1.minorRadius > 20.0 || t2.minorRadius > 20.0 {
+                if case .sliding = currentState {
+                    endCurrentGesture(cursorManager: cursorManager)
+                }
+                currentState = .idle
+                return
+            }
+
+            // Reject if fingers are too far apart (e.g. fingers on opposite edges)
+            let fingerDist = distance(t1.position, t2.position)
+            if fingerDist > 0.25 {
+                if case .sliding = currentState {
+                    endCurrentGesture(cursorManager: cursorManager)
+                }
+                currentState = .idle
+                return
+            }
+
+            let centroid = MTPoint(x: (t1.position.x + t2.position.x) / 2.0, y: (t1.position.y + t2.position.y) / 2.0)
+            let edgeWidth = Float(preferences.edgeWidth)
+            let edge = classifyTwoFingerEdge(t1: t1, t2: t2, centroid: centroid, edgeWidth: edgeWidth, activeArea: preferences.activeArea)
+
+            let isAnyLifted = t1.phase == .breakTouch || t1.phase == .notTracking || t1.phase == .outOfRange
+                || t2.phase == .breakTouch || t2.phase == .notTracking || t2.phase == .outOfRange
+            let isAnyMake = t1.phase == .makeTouch || t2.phase == .makeTouch || t1.phase == .startInRange || t2.phase == .startInRange
+
+            if isAnyLifted {
+                if case .sliding = currentState {
+                    endCurrentGesture(cursorManager: cursorManager)
+                }
+                currentState = .idle
+                return
+            }
+
+            if isAnyMake {
+                if edge != .none {
+                    currentState = .candidate(edge: edge, startPoint: centroid, startTime: max(t1.timestamp, t2.timestamp))
+                } else {
+                    if case .sliding = currentState {
+                        endCurrentGesture(cursorManager: cursorManager)
+                    }
+                    currentState = .idle
+                }
+                return
+            }
+
+            // Touching / dragging with 2 fingers
             switch currentState {
             case .idle:
-                // Check if touch arrived in edge
-                let edge = classifyEdge(point: p, edgeWidth: edgeWidth, activeArea: preferences.activeArea)
                 if edge != .none {
-                    currentState = .candidate(edge: edge, startPoint: p, startTime: touch.timestamp)
+                    currentState = .candidate(edge: edge, startPoint: centroid, startTime: max(t1.timestamp, t2.timestamp))
                 }
+            case .candidate(let candEdge, let startPoint, _):
+                let dx = centroid.x - startPoint.x
+                let dy = centroid.y - startPoint.y
 
-            case .candidate(let edge, let startPoint, _):
-                // Check if movement exceeds deadzone
-                let dx = p.x - startPoint.x
-                let dy = p.y - startPoint.y
-
-                if edge == .bottom {
-                    // Bottom edge: horizontal swipe check
-                    if abs(dx) > deadzone {
-                        currentState = .sliding(edge: edge, lastPoint: p, accumulatedDelta: 0, lastHapticStep: 0)
-                        cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(p.x), y: CGFloat(p.y)))
-                        delegate?.handleGestureAction(.gestureStarted(edge: edge))
-                    } else if abs(dy) > deadzone * 2 {
-                        // Inward vertical swipe off bottom: reject
-                        currentState = .idle
-                    }
-                } else if edge == .left || edge == .right || edge == .topRightCorner {
-                    // Vertical slide
-                    let canSlide: Bool
-                    let effectiveEdge: EdgeLocation
-                    if edge == .topRightCorner {
-                        effectiveEdge = .right
-                        canSlide = (startPoint.y <= preferences.activeArea.maxY) || (preferences.activeArea == .entire)
-                    } else {
-                        effectiveEdge = edge
-                        canSlide = true
-                    }
-
-                    if canSlide && abs(dy) > deadzone {
-                        cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(p.x), y: CGFloat(p.y)))
-                        delegate?.handleGestureAction(.gestureStarted(edge: effectiveEdge))
+                if candEdge == .left || candEdge == .right {
+                    if abs(dy) > deadzone {
+                        cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(centroid.x), y: CGFloat(centroid.y)))
+                        delegate?.handleGestureAction(.gestureStarted(edge: candEdge))
 
                         let sensitivity = Float(preferences.sensitivity)
                         let precisionFactor: Float = (preferences.preciseSliding || shiftOptionHeld) ? 0.25 : 1.0
                         let scaledDy = dy * sensitivity * precisionFactor
 
-                        let isRight = (effectiveEdge == .right)
+                        let isRight = (candEdge == .right)
                         let isVolumeTarget = preferences.swapSides ? !isRight : isRight
 
                         if isVolumeTarget {
@@ -744,10 +761,204 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
                             initialHapticStep = currentStep.rounded(.towardZero)
                         }
 
-                        currentState = .sliding(edge: effectiveEdge, lastPoint: p, accumulatedDelta: scaledDy, lastHapticStep: initialHapticStep)
+                        currentState = .sliding(edge: candEdge, lastPoint: centroid, accumulatedDelta: scaledDy, lastHapticStep: initialHapticStep)
                     } else if abs(dx) > deadzone * 2 {
-                        // Inward horizontal swipe off edge: reject
                         currentState = .idle
+                    }
+                } else if candEdge == .bottom {
+                    if abs(dx) > deadzone {
+                        currentState = .sliding(edge: candEdge, lastPoint: centroid, accumulatedDelta: 0, lastHapticStep: 0)
+                        cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(centroid.x), y: CGFloat(centroid.y)))
+                        delegate?.handleGestureAction(.gestureStarted(edge: candEdge))
+                    } else if abs(dy) > deadzone * 2 {
+                        currentState = .idle
+                    }
+                }
+
+            case .sliding(let slideEdge, let lastPoint, var accumulated, var lastHapticStep):
+                let dy = centroid.y - lastPoint.y
+                let dx = centroid.x - lastPoint.x
+
+                if (slideEdge == .left || slideEdge == .right) && abs(dx) > deadzone * 3 {
+                    endCurrentGesture(cursorManager: cursorManager)
+                    return
+                } else if slideEdge == .bottom && abs(dy) > deadzone * 3 {
+                    endCurrentGesture(cursorManager: cursorManager)
+                    return
+                }
+
+                let sensitivity = Float(preferences.sensitivity)
+                let precisionFactor: Float = (preferences.preciseSliding || shiftOptionHeld) ? 0.25 : 1.0
+
+                if slideEdge == .left || slideEdge == .right {
+                    let scaledDy = dy * sensitivity * precisionFactor
+                    accumulated += scaledDy
+
+                    let isRight = (slideEdge == .right)
+                    let isVolumeTarget = preferences.swapSides ? !isRight : isRight
+
+                    if isVolumeTarget {
+                        delegate?.handleGestureAction(.volumeDelta(scaledDy))
+                    } else {
+                        delegate?.handleGestureAction(.brightnessDelta(scaledDy))
+                    }
+
+                    if preferences.enableHaptics {
+                        let stepSize: Float = (preferences.preciseSliding || shiftOptionHeld) ? (1.0 / 64.0) : (1.0 / 16.0)
+                        let currentStep = accumulated / stepSize
+                        if abs(currentStep - lastHapticStep) >= 1.0 {
+                            let ticksToFire = Int(abs(currentStep - lastHapticStep))
+                            for _ in 0..<ticksToFire {
+                                hapticsManager?.performTick()
+                            }
+                            lastHapticStep = currentStep.rounded(.towardZero)
+                        }
+                    }
+
+                    currentState = .sliding(edge: slideEdge, lastPoint: centroid, accumulatedDelta: accumulated, lastHapticStep: lastHapticStep)
+                } else if slideEdge == .bottom {
+                    let scaledDx = dx * sensitivity * precisionFactor
+                    accumulated += scaledDx
+
+                    let skipThreshold: Float = 0.15
+                    if abs(accumulated) >= skipThreshold {
+                        let swipeRight = accumulated > 0
+                        accumulated = 0
+                        if preferences.reverseMediaSwipe {
+                            if swipeRight {
+                                delegate?.handleGestureAction(.mediaPrevious)
+                            } else {
+                                delegate?.handleGestureAction(.mediaNext)
+                            }
+                        } else {
+                            if swipeRight {
+                                delegate?.handleGestureAction(.mediaNext)
+                            } else {
+                                delegate?.handleGestureAction(.mediaPrevious)
+                            }
+                        }
+                    }
+                    currentState = .sliding(edge: slideEdge, lastPoint: centroid, accumulatedDelta: accumulated, lastHapticStep: lastHapticStep)
+                }
+
+            case .ending:
+                currentState = .idle
+            }
+            return
+        }
+
+        // MARK: - 1 Touch: Single-Finger Processing
+        let touch = validTouches[0]
+
+        // Palm rejection: large contact patch
+        if touch.majorRadius > 20.0 || touch.minorRadius > 20.0 {
+            if case .sliding = currentState {
+                endCurrentGesture(cursorManager: cursorManager)
+            }
+            currentState = .idle
+            return
+        }
+
+        // If we were in a 2-finger slide and dropped to 1 finger, end gesture
+        if case .sliding = currentState, activeGestureFingerCount == 2 {
+            endCurrentGesture(cursorManager: cursorManager)
+            return
+        }
+
+        let p = touch.position
+        let edgeWidth = Float(preferences.edgeWidth)
+
+        switch touch.phase {
+        case .makeTouch, .startInRange:
+            let edge = classifyEdge(point: p, edgeWidth: edgeWidth, activeArea: preferences.activeArea)
+            if edge != .none {
+                if preferences.requireTwoFingerSlide {
+                    if edge == .topRightCorner || edge == .bottom {
+                        currentState = .candidate(edge: edge, startPoint: p, startTime: touch.timestamp)
+                    } else {
+                        currentState = .idle
+                    }
+                } else {
+                    currentState = .candidate(edge: edge, startPoint: p, startTime: touch.timestamp)
+                }
+            } else {
+                currentState = .idle
+            }
+
+        case .touching:
+            switch currentState {
+            case .idle:
+                let edge = classifyEdge(point: p, edgeWidth: edgeWidth, activeArea: preferences.activeArea)
+                if edge != .none {
+                    if preferences.requireTwoFingerSlide {
+                        if edge == .topRightCorner || edge == .bottom {
+                            currentState = .candidate(edge: edge, startPoint: p, startTime: touch.timestamp)
+                        }
+                    } else {
+                        currentState = .candidate(edge: edge, startPoint: p, startTime: touch.timestamp)
+                    }
+                }
+
+            case .candidate(let edge, let startPoint, _):
+                let dx = p.x - startPoint.x
+                let dy = p.y - startPoint.y
+
+                if preferences.requireTwoFingerSlide {
+                    if abs(dx) > deadzone * 2 || abs(dy) > deadzone * 2 {
+                        currentState = .idle
+                    }
+                } else {
+                    if edge == .bottom {
+                        if abs(dx) > deadzone {
+                            currentState = .sliding(edge: edge, lastPoint: p, accumulatedDelta: 0, lastHapticStep: 0)
+                            cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(p.x), y: CGFloat(p.y)))
+                            delegate?.handleGestureAction(.gestureStarted(edge: edge))
+                        } else if abs(dy) > deadzone * 2 {
+                            currentState = .idle
+                        }
+                    } else if edge == .left || edge == .right || edge == .topRightCorner {
+                        let canSlide: Bool
+                        let effectiveEdge: EdgeLocation
+                        if edge == .topRightCorner {
+                            effectiveEdge = .right
+                            canSlide = (startPoint.y <= preferences.activeArea.maxY) || (preferences.activeArea == .entire)
+                        } else {
+                            effectiveEdge = edge
+                            canSlide = true
+                        }
+
+                        if canSlide && abs(dy) > deadzone {
+                            cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(p.x), y: CGFloat(p.y)))
+                            delegate?.handleGestureAction(.gestureStarted(edge: effectiveEdge))
+
+                            let sensitivity = Float(preferences.sensitivity)
+                            let precisionFactor: Float = (preferences.preciseSliding || shiftOptionHeld) ? 0.25 : 1.0
+                            let scaledDy = dy * sensitivity * precisionFactor
+
+                            let isRight = (effectiveEdge == .right)
+                            let isVolumeTarget = preferences.swapSides ? !isRight : isRight
+
+                            if isVolumeTarget {
+                                delegate?.handleGestureAction(.volumeDelta(scaledDy))
+                            } else {
+                                delegate?.handleGestureAction(.brightnessDelta(scaledDy))
+                            }
+
+                            var initialHapticStep: Float = 0
+                            if preferences.enableHaptics {
+                                let stepSize: Float = (preferences.preciseSliding || shiftOptionHeld) ? (1.0 / 64.0) : (1.0 / 16.0)
+                                let currentStep = scaledDy / stepSize
+                                let ticks = Int(abs(currentStep))
+                                for _ in 0..<ticks {
+                                    hapticsManager?.performTick()
+                                }
+                                initialHapticStep = currentStep.rounded(.towardZero)
+                            }
+
+                            currentState = .sliding(edge: effectiveEdge, lastPoint: p, accumulatedDelta: scaledDy, lastHapticStep: initialHapticStep)
+                        } else if abs(dx) > deadzone * 2 {
+                            currentState = .idle
+                        }
                     }
                 }
 
@@ -887,6 +1098,7 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
         cursorManager?.unfreezeCursor()
         delegate?.handleGestureAction(.gestureEnded)
         currentState = .idle
+        activeGestureFingerCount = 1
     }
 
     public func classifyEdge(point: MTPoint, edgeWidth: Float, activeArea: ActiveAreaZone) -> EdgeLocation {
@@ -917,6 +1129,49 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
         // Left edge
         if point.x <= edgeWidth {
             return .left
+        }
+
+        return .none
+    }
+
+    public func classifyTwoFingerEdge(
+        t1: SyntheticTouch,
+        t2: SyntheticTouch,
+        centroid: MTPoint,
+        edgeWidth: Float,
+        activeArea: ActiveAreaZone
+    ) -> EdgeLocation {
+        // Both on right half
+        if t1.position.x > 0.5 && t2.position.x > 0.5 {
+            let rightThreshold = 1.0 - edgeWidth
+            let expandedThreshold = 1.0 - max(edgeWidth * 1.5, 0.12)
+            let isNearRight = t1.position.x >= rightThreshold
+                || t2.position.x >= rightThreshold
+                || centroid.x >= expandedThreshold
+
+            if isNearRight {
+                if centroid.y <= activeArea.maxY || activeArea == .entire || centroid.y >= (1.0 - cornerMargin) {
+                    return .right
+                }
+            }
+        } else if t1.position.x < 0.5 && t2.position.x < 0.5 {
+            // Both on left half
+            let leftThreshold = edgeWidth
+            let expandedThreshold = max(edgeWidth * 1.5, 0.12)
+            let isNearLeft = t1.position.x <= leftThreshold
+                || t2.position.x <= leftThreshold
+                || centroid.x <= expandedThreshold
+
+            if isNearLeft {
+                if centroid.y <= activeArea.maxY || activeArea == .entire {
+                    return .left
+                }
+            }
+        } else if t1.position.y < 0.5 && t2.position.y < 0.5 {
+            // Both on bottom
+            if centroid.y <= bottomMargin * 1.5 || t1.position.y <= bottomMargin || t2.position.y <= bottomMargin {
+                return .bottom
+            }
         }
 
         return .none

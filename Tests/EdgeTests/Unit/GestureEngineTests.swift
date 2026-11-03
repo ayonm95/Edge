@@ -405,4 +405,128 @@ struct GestureEngineTests {
             Issue.record("Expected candidate from raw MTTouch frame")
         }
     }
+
+    // MARK: - 9. Two-Finger Edge Sliding & Single-Finger Mute
+
+    @Test("Two-finger swipe on right edge modulates volume")
+    func twoFingerRightEdgeSliding() {
+        let spy = SpyGestureDelegate()
+        let engine = Edge.EdgeGestureEngine(delegate: spy)
+        let cursor = Edge.CursorManager()
+        let haptics = Edge.HapticsManager(minInterval: 0.0)
+        let prefs = Edge.PreferencesSnapshot(requireTwoFingerSlide: true)
+
+        let t1 = Edge.SyntheticTouch(id: 1, position: Edge.MTPoint(x: 0.96, y: 0.40), phase: .makeTouch, timestamp: 1.0)
+        let t2 = Edge.SyntheticTouch(id: 2, position: Edge.MTPoint(x: 0.90, y: 0.40), phase: .makeTouch, timestamp: 1.0)
+        engine.processFrame(touches: [t1, t2], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        if case .candidate(let edge, _, _) = engine.currentState {
+            #expect(edge == .right)
+        } else {
+            Issue.record("Expected candidate state for two fingers on right edge")
+        }
+
+        // Drag both fingers upward
+        let m1 = Edge.SyntheticTouch(id: 1, position: Edge.MTPoint(x: 0.96, y: 0.45), phase: .touching, timestamp: 1.02)
+        let m2 = Edge.SyntheticTouch(id: 2, position: Edge.MTPoint(x: 0.90, y: 0.45), phase: .touching, timestamp: 1.02)
+        engine.processFrame(touches: [m1, m2], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        if case .sliding(let edge, _, _, _) = engine.currentState {
+            #expect(edge == .right)
+        } else {
+            Issue.record("Expected sliding state for two fingers on right edge")
+        }
+
+        #expect(cursor.isFrozen)
+        let hasVolumeDelta = spy.actions.contains { action in
+            if case .volumeDelta(let delta) = action, delta > 0 { return true }
+            return false
+        }
+        #expect(hasVolumeDelta)
+
+        // Lift fingers
+        let u1 = Edge.SyntheticTouch(id: 1, position: Edge.MTPoint(x: 0.96, y: 0.45), phase: .breakTouch, timestamp: 1.05)
+        let u2 = Edge.SyntheticTouch(id: 2, position: Edge.MTPoint(x: 0.90, y: 0.45), phase: .breakTouch, timestamp: 1.05)
+        engine.processFrame(touches: [u1, u2], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        #expect(engine.currentState == .idle)
+        #expect(!cursor.isFrozen)
+        #expect(spy.actions.contains(.gestureEnded))
+    }
+
+    @Test("Two-finger swipe on left edge modulates brightness")
+    func twoFingerLeftEdgeSliding() {
+        let spy = SpyGestureDelegate()
+        let engine = Edge.EdgeGestureEngine(delegate: spy)
+        let cursor = Edge.CursorManager()
+        let haptics = Edge.HapticsManager(minInterval: 0.0)
+        let prefs = Edge.PreferencesSnapshot(requireTwoFingerSlide: true)
+
+        let t1 = Edge.SyntheticTouch(id: 1, position: Edge.MTPoint(x: 0.04, y: 0.40), phase: .makeTouch, timestamp: 1.0)
+        let t2 = Edge.SyntheticTouch(id: 2, position: Edge.MTPoint(x: 0.10, y: 0.40), phase: .makeTouch, timestamp: 1.0)
+        engine.processFrame(touches: [t1, t2], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        let m1 = Edge.SyntheticTouch(id: 1, position: Edge.MTPoint(x: 0.04, y: 0.46), phase: .touching, timestamp: 1.02)
+        let m2 = Edge.SyntheticTouch(id: 2, position: Edge.MTPoint(x: 0.10, y: 0.46), phase: .touching, timestamp: 1.02)
+        engine.processFrame(touches: [m1, m2], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        if case .sliding(let edge, _, _, _) = engine.currentState {
+            #expect(edge == .left)
+        } else {
+            Issue.record("Expected sliding state for two fingers on left edge")
+        }
+
+        let hasBrightnessDelta = spy.actions.contains { action in
+            if case .brightnessDelta(let delta) = action, delta > 0 { return true }
+            return false
+        }
+        #expect(hasBrightnessDelta)
+    }
+
+    @Test("Single-finger drag does NOT slide when requireTwoFingerSlide is enabled")
+    func singleFingerDragIgnoredWhenRequireTwoFingerSlide() {
+        let spy = SpyGestureDelegate()
+        let engine = Edge.EdgeGestureEngine(delegate: spy)
+        let cursor = Edge.CursorManager()
+        let haptics = Edge.HapticsManager(minInterval: 0.0)
+        let prefs = Edge.PreferencesSnapshot(requireTwoFingerSlide: true)
+
+        let t1 = Edge.SyntheticTouch(position: Edge.MTPoint(x: 0.95, y: 0.40), phase: .makeTouch, timestamp: 1.0)
+        let t2 = Edge.SyntheticTouch(position: Edge.MTPoint(x: 0.95, y: 0.55), phase: .touching, timestamp: 1.02)
+        engine.processFrame(touches: [t1], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+        engine.processFrame(touches: [t2], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        #expect(engine.currentState == .idle)
+        #expect(!cursor.isFrozen)
+        let hasVolumeDelta = spy.actions.contains { action in
+            if case .volumeDelta = action { return true }
+            return false
+        }
+        #expect(!hasVolumeDelta)
+    }
+
+    @Test("Single-finger double tap STILL mutes when requireTwoFingerSlide is enabled")
+    func singleFingerDoubleTapMutesWhenRequireTwoFingerSlide() {
+        let spy = SpyGestureDelegate()
+        let engine = Edge.EdgeGestureEngine(delegate: spy)
+        let cursor = Edge.CursorManager()
+        let haptics = Edge.HapticsManager(minInterval: 0.0)
+        let prefs = Edge.PreferencesSnapshot(requireTwoFingerSlide: true)
+
+        // Tap 1
+        let tap1Down = Edge.SyntheticTouch(position: Edge.MTPoint(x: 0.95, y: 0.95), phase: .makeTouch, timestamp: 1.0)
+        let tap1Up = Edge.SyntheticTouch(position: Edge.MTPoint(x: 0.95, y: 0.95), phase: .breakTouch, timestamp: 1.05)
+        engine.processFrame(touches: [tap1Down], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+        engine.processFrame(touches: [tap1Up], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        #expect(!spy.actions.contains(.quickMute))
+
+        // Tap 2 (0.1s later)
+        let tap2Down = Edge.SyntheticTouch(position: Edge.MTPoint(x: 0.95, y: 0.95), phase: .makeTouch, timestamp: 1.15)
+        let tap2Up = Edge.SyntheticTouch(position: Edge.MTPoint(x: 0.95, y: 0.95), phase: .breakTouch, timestamp: 1.20)
+        engine.processFrame(touches: [tap2Down], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+        engine.processFrame(touches: [tap2Up], preferences: prefs, cursorManager: cursor, hapticsManager: haptics)
+
+        #expect(spy.actions.contains(.quickMute))
+    }
 }
