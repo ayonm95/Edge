@@ -1,0 +1,12 @@
+{
+    "schema_version": 2,
+    "commit": "59126772a418378a51d5cc02e8ac127f78f0100e",
+    "indexed_at": "2026-11-03T03:25:27Z",
+    "project": "Users-ayon-Downloads-all-projects-Edge",
+    "nodes": 1160,
+    "edges": 5880,
+    "original_size": 5570560,
+    "compressed_size": 788614,
+    "compression_level": 9,
+    "reconcile_basis": "git-clean-head"
+}
