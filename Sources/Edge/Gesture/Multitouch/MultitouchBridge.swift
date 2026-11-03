@@ -68,11 +68,11 @@ private typealias MTDeviceStopFunc = @convention(c) (MTDeviceRef) -> Int32
 private typealias MTContactCallbackFunc = @convention(c) (
     MTDeviceRef,
     UnsafeMutableRawPointer?,
-    Int32,
+    Int,
     Double,
-    Int32,
+    Int,
     UnsafeMutableRawPointer?
-) -> Int32
+) -> Void
 
 private typealias MTRegisterContactFrameCallbackWithRefconFunc = @convention(c) (
     MTDeviceRef,
@@ -99,14 +99,14 @@ private let globalMultitouchCallback: MTContactCallbackFunc = { device, dataPtr,
     MultitouchRegistry.lock.lock()
     guard let bridge = MultitouchRegistry.activeBridge, bridge.isRunning else {
         MultitouchRegistry.lock.unlock()
-        return 0
+        return
     }
     MultitouchRegistry.lock.unlock()
 
     var touches: [MTTouch] = []
     if let dataPtr = dataPtr, count > 0 {
         let typedPtr = dataPtr.assumingMemoryBound(to: MTTouch.self)
-        let buffer = UnsafeBufferPointer(start: typedPtr, count: Int(count))
+        let buffer = UnsafeBufferPointer(start: typedPtr, count: count)
         touches = Array(buffer)
     }
 
@@ -114,9 +114,8 @@ private let globalMultitouchCallback: MTContactCallbackFunc = { device, dataPtr,
         device: device,
         touches: touches,
         timestamp: timestamp,
-        frame: frame
+        frame: Int32(frame & 0x7FFFFFFF)
     )
-    return 0
 }
 
 // MARK: - MultitouchBridge Implementation
@@ -137,6 +136,7 @@ public final class MultitouchBridge: MultitouchBridging, @unchecked Sendable {
 
     private let lock = NSLock()
     private var dylibHandle: UnsafeMutableRawPointer?
+    private var cfDeviceList: CFMutableArray?
     private var activeDevices: [DeviceRecord] = []
     private var _isRunning: Bool = false
     private weak var delegate: (any MultitouchBridgeDelegate)?
@@ -257,6 +257,7 @@ public final class MultitouchBridge: MultitouchBridging, @unchecked Sendable {
 
         if let unmanagedList = createList() {
             let cfList = unmanagedList.takeRetainedValue()
+            self.cfDeviceList = cfList
             let count = CFArrayGetCount(cfList)
 
             for i in 0..<count {
@@ -331,6 +332,7 @@ public final class MultitouchBridge: MultitouchBridging, @unchecked Sendable {
             }
         }
         activeDevices.removeAll()
+        self.cfDeviceList = nil
     }
 
     // MARK: - Internal Frame Dispatching
@@ -347,13 +349,12 @@ public final class MultitouchBridge: MultitouchBridging, @unchecked Sendable {
             return
         }
 
-        guard let record = activeDevices.first(where: { $0.ref == device }) else {
-            lock.unlock()
-            return
-        }
+        let record = activeDevices.first(where: { $0.ref == device })
+        let kind = record?.kind ?? .builtInTrackpad
+        let isBuiltIn = record?.isBuiltIn ?? true
 
         // Magic mouse filtering check
-        if record.kind == .magicMouse {
+        if kind == .magicMouse {
             let allowMouse = preferencesHolder?.get().enableMagicMouse ?? enableMagicMouse
             if !allowMouse {
                 lock.unlock()
@@ -362,8 +363,7 @@ public final class MultitouchBridge: MultitouchBridging, @unchecked Sendable {
         }
 
         let currentDelegate = delegate
-        let kind = record.kind
-        let builtIn = record.isBuiltIn
+        let builtIn = isBuiltIn
         lock.unlock()
 
         currentDelegate?.multitouchBridge(

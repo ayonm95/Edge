@@ -93,6 +93,58 @@ struct GestureTuningTab: View {
                     .frame(height: 180)
                 }
 
+                // How to Swipe Guide
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("How to Swipe on Your Trackpad", systemImage: "hand.tap.fill")
+                        .font(.headline)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        GestureGuideRow(
+                            icon: preferences.swapSides ? "sun.max.fill" : "speaker.wave.2.fill",
+                            color: preferences.swapSides ? .orange : .blue,
+                            title: preferences.swapSides ? "Right Edge: Brightness ☀️" : "Right Edge: Volume 🔊",
+                            action: "Slide 1 finger up or down along the right edge of the trackpad glass."
+                        )
+
+                        GestureGuideRow(
+                            icon: preferences.swapSides ? "speaker.wave.2.fill" : "sun.max.fill",
+                            color: preferences.swapSides ? .blue : .orange,
+                            title: preferences.swapSides ? "Left Edge: Volume 🔊" : "Left Edge: Brightness ☀️",
+                            action: "Slide 1 finger up or down along the left edge of the trackpad glass."
+                        )
+
+                        GestureGuideRow(
+                            icon: "speaker.slash.fill",
+                            color: .red,
+                            title: "Top-Right Corner: Quick Mute 🔇",
+                            action: "Double-tap the top-right corner to instantly toggle mute/unmute."
+                        )
+
+                        GestureGuideRow(
+                            icon: "playpause.fill",
+                            color: .purple,
+                            title: "Bottom Strip: Media Navigation ⏯",
+                            action: "Swipe 1 finger left/right along the bottom edge to skip tracks; double-tap to Play/Pause."
+                        )
+                    }
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
+
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "hand.point.up.left.fill")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text("Important: Use ONE finger right along the outer edge. Two fingers will scroll normally.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
                 Divider()
 
                 // Edge Width Slider
@@ -386,5 +438,33 @@ struct MediaAndDeviceTab: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Gesture Guide Helper Row
+
+struct GestureGuideRow: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let action: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(color)
+                .frame(width: 22, height: 22)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(action)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+        }
     }
 }

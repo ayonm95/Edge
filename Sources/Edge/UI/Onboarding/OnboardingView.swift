@@ -73,6 +73,31 @@ public struct OnboardingView: View {
                     StepRow(number: "2", text: "Find Edge in the Accessibility list and switch it ON.")
                     StepRow(number: "3", text: "Edge will immediately detect the change and activate.")
                 }
+
+                Divider()
+
+                // Gesture Guide Summary
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("How Gestures Work (Single Finger):")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    HStack(spacing: 14) {
+                        Label("Right: Volume", systemImage: "speaker.wave.2.fill")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Label("Left: Brightness", systemImage: "sun.max.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                        Label("Corner: Mute", systemImage: "speaker.slash.fill")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                    Text("💡 Slide 1 finger right along the physical edge of the trackpad glass.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
             .padding(16)
             .background(

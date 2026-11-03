@@ -160,7 +160,7 @@ public final class EdgeGestureEngine: @unchecked Sendable {
                         currentState = .sliding(edge: edge, lastPoint: p, accumulatedDelta: 0, lastHapticStep: 0)
                         cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(p.x), y: CGFloat(p.y)))
                         delegate?.handleGestureAction(.gestureStarted(edge: edge))
-                    } else if abs(dy) > deadzone * 2 {
+                    } else if abs(dy) > deadzone * 2 && abs(dy) > abs(dx) * 1.5 {
                         // Inward vertical swipe off bottom: reject
                         currentState = .idle
                     }
@@ -195,7 +195,7 @@ public final class EdgeGestureEngine: @unchecked Sendable {
                         }
 
                         currentState = .sliding(edge: edge, lastPoint: p, accumulatedDelta: scaledDy, lastHapticStep: initialHapticStep)
-                    } else if abs(dx) > deadzone * 2 {
+                    } else if abs(dx) > deadzone * 2 && abs(dx) > abs(dy) * 1.5 {
                         // Inward horizontal swipe off edge: reject
                         currentState = .idle
                     }
