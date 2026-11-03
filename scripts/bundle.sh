@@ -118,6 +118,8 @@ cat <<EOF > "${CONTENTS_DIR}/Info.plist"
     <string>${VERSION}</string>
     <key>CFBundleVersion</key>
     <string>${BUILD_NUMBER}</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>

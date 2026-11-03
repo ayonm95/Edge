@@ -14,20 +14,29 @@ public struct OnboardingView: View {
         VStack(spacing: 24) {
             // Header
             VStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.blue.opacity(0.8), Color.indigo.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                if let iconImage = NSImage(named: "AppIcon") ?? NSImage(contentsOfFile: Bundle.main.path(forResource: "AppIcon_1024", ofType: "png") ?? "") {
+                    Image(nsImage: iconImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 72, height: 72)
+                        .cornerRadius(16)
+                        .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+                } else {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.blue.opacity(0.8), Color.indigo.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .frame(width: 64, height: 64)
+                            .frame(width: 64, height: 64)
 
-                    Image(systemName: "slider.horizontal.below.rectangle")
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundColor(.white)
+                        Image(systemName: "slider.horizontal.below.rectangle")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
                 }
 
                 Text("Welcome to Edge")

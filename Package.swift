@@ -18,6 +18,9 @@ let package = Package(
             name: "Edge",
             dependencies: [],
             path: "Sources/Edge",
+            resources: [
+                .process("Resources")
+            ],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("SwiftUI"),

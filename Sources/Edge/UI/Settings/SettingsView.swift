@@ -178,7 +178,43 @@ struct GeneralTab: View {
     @ObservedObject var viewModel: SettingsViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 18) {
+            // App Identity & Icon
+            HStack(spacing: 14) {
+                if let iconImage = NSImage(named: "AppIcon") ?? NSImage(contentsOfFile: Bundle.main.path(forResource: "AppIcon_1024", ofType: "png") ?? "") {
+                    Image(nsImage: iconImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 44, height: 44)
+                        .cornerRadius(10)
+                        .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
+                } else {
+                    Image(systemName: "slider.horizontal.below.rectangle")
+                        .font(.system(size: 32))
+                        .foregroundColor(.blue)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text("Edge")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        Text("v1.0.0")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                    }
+                    Text("Physical trackpad edge sliders for volume & brightness")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.bottom, 2)
+
+            Divider()
+
             // Control Placement / Side Swapping
             VStack(alignment: .leading, spacing: 8) {
                 Text("Control Placement")

@@ -1,5 +1,9 @@
 # Edge (Trackpad Edge Slider for macOS)
 
+<p align="center">
+  <img src="Sources/Edge/Resources/AppIcon_1024.png" width="128" height="128" alt="Edge App Icon" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);" />
+</p>
+
 A native macOS menu bar application that turns the physical boundaries of your MacBook trackpad or Magic Trackpad into precise hardware sliders for volume and screen brightness, with quick mute, media navigation, haptic feedback, and a floating liquid-glass OSD HUD.
 
 Built in 100% pure Swift & SwiftUI with zero third-party framework dependencies.
