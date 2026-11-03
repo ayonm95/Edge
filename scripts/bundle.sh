@@ -145,8 +145,8 @@ fi
 # ------------------------------------------------------------------------------
 # 4. Ad-Hoc Code Signing & Verification
 # ------------------------------------------------------------------------------
-echo "==> Ad-hoc signing ${APP_NAME}.app..."
-codesign --force --deep --sign - "${APP_DIR}"
+echo "==> Ad-hoc signing ${APP_NAME}.app with stable designated requirement..."
+codesign --force --deep --sign - -r="designated => identifier \"com.edge.slider\"" "${APP_DIR}"
 
 echo "==> Verifying code signature..."
 codesign --verify --deep --strict "${APP_DIR}"

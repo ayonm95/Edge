@@ -110,57 +110,69 @@ public struct OnboardingView: View {
             )
 
             // Dynamic Trust Status Indicator
-            HStack(spacing: 8) {
-                if permissionManager.isTrusted {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Permission Granted! Edge is now active.")
-                        .font(.subheadline)
-                        .foregroundColor(.green)
-                        .fontWeight(.medium)
-                } else {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text("Waiting for permission in System Settings...")
-                        .font(.subheadline)
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
+                    if permissionManager.isTrusted {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Permission Granted! Edge is fully active.")
+                            .font(.subheadline)
+                            .foregroundColor(.green)
+                            .fontWeight(.medium)
+                    } else {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.blue)
+                        Text("Sliders are active! Accessibility enables cursor lock.")
+                            .font(.subheadline)
+                            .foregroundColor(.primary)
+                            .fontWeight(.medium)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .background(
+                    Capsule()
+                        .fill(permissionManager.isTrusted ? Color.green.opacity(0.12) : Color.blue.opacity(0.1))
+                )
+
+                if !permissionManager.isTrusted {
+                    Text("Tip: In System Settings, toggle Edge OFF and ON to refresh macOS permission.")
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 14)
-            .background(
-                Capsule()
-                    .fill(permissionManager.isTrusted ? Color.green.opacity(0.12) : Color.secondary.opacity(0.1))
-            )
 
-            // Buttons
-            HStack(spacing: 12) {
+            // Action Buttons
+            HStack(spacing: 10) {
                 Button(action: {
                     permissionManager.openSystemSettingsDeepLink()
                 }) {
-                    Label("Open System Settings", systemImage: "gearshape")
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 10)
+                    Label("System Settings", systemImage: "gearshape")
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                }
+                .buttonStyle(.bordered)
+
+                Button(action: {
+                    permissionManager.promptAccessibility()
+                }) {
+                    Label("Check Now", systemImage: "arrow.clockwise")
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                }
+                .buttonStyle(.bordered)
+
+                Button(action: {
+                    onDismiss?()
+                }) {
+                    Text("Continue to Edge")
+                        .fontWeight(.semibold)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 12)
                 }
                 .buttonStyle(.borderedProminent)
-
-                if permissionManager.isTrusted {
-                    Button(action: {
-                        onDismiss?()
-                    }) {
-                        Text("Get Started")
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 16)
-                    }
-                    .buttonStyle(.bordered)
-                } else {
-                    Button("Dismiss for Now") {
-                        onDismiss?()
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                }
+                .tint(.blue)
             }
         }
         .padding(28)

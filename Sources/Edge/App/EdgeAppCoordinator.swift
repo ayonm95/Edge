@@ -152,12 +152,14 @@ public final class EdgeAppCoordinator: NSObject, EdgeGestureEngineDelegate, Mult
             isAccessibilityGranted: isTrusted
         )
 
+        // Always start the multitouch bridge so volume, brightness,
+        // haptics, HUD, and live trackpad preview work immediately!
+        startBridgeIfAllowed()
+
         if !isTrusted {
             // Guide user on initial launch
             permissionManager.startPolling(interval: 1.0)
             OnboardingWindowController.shared.show()
-        } else {
-            startBridgeIfAllowed()
         }
 
         isRunning = true
@@ -194,10 +196,8 @@ public final class EdgeAppCoordinator: NSObject, EdgeGestureEngineDelegate, Mult
             isAccessibilityGranted: isTrusted
         )
 
-        if isTrusted {
+        if isTrusted && isEnabled {
             startBridgeIfAllowed()
-        } else {
-            multitouchBridge.stop()
         }
     }
 
