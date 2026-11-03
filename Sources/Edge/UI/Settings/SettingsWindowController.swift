@@ -17,23 +17,29 @@ public final class SettingsWindowController: NSWindowController, NSWindowDelegat
     
     // MARK: - Initialization
     public init() {
+        super.init(window: nil)
+    }
+
+    private func ensureWindow() -> NSWindow {
+        if let existing = self.window {
+            return existing
+        }
         let contentRect = NSRect(
             x: 0,
             y: 0,
             width: Self.defaultWidth,
             height: Self.defaultHeight
         )
-        
+
         let window = NSWindow(
             contentRect: contentRect,
             styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
-            defer: false
+            defer: true
         )
-        
-        super.init(window: window)
-        
+        self.window = window
         setupWindow(window)
+        return window
     }
     
     @available(*, unavailable)
@@ -64,7 +70,7 @@ public final class SettingsWindowController: NSWindowController, NSWindowDelegat
     
     /// Presents and activates the settings window, positioning it near top-center.
     public func show() {
-        guard let window = self.window else { return }
+        let window = ensureWindow()
         
         if !window.isVisible {
             positionTopCenter(window)

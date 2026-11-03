@@ -28,14 +28,36 @@ public struct NormalizedContact: Identifiable, Sendable, Equatable {
     }
 }
 
+fileprivate let previewLock = NSLock()
+
 /// Observable state holding real-time touch contacts for the Settings preview.
 /// Only receives updates when isActive == true (Settings window visible).
 @MainActor
 public final class TouchPreviewState: ObservableObject {
     public static let shared = TouchPreviewState()
-    
+
+    private static nonisolated(unsafe) var _isGloballyActive: Bool = false
+
+    /// Fast, nonisolated, zero-allocation check whether live preview is active.
+    /// Used by MultitouchBridge on 120Hz background threads to skip Task allocations.
+    public static nonisolated var isLivePreviewActive: Bool {
+        previewLock.lock()
+        defer { previewLock.unlock() }
+        return _isGloballyActive
+    }
+
+    public static nonisolated func setLivePreviewActive(_ active: Bool) {
+        previewLock.lock()
+        _isGloballyActive = active
+        previewLock.unlock()
+    }
+
     /// Controls whether background touch events are forwarded to this preview
-    @Published public var isActive: Bool = false
+    @Published public var isActive: Bool = false {
+        didSet {
+            Self.setLivePreviewActive(isActive)
+        }
+    }
     
     /// Current active touch contacts
     @Published public var contacts: [NormalizedContact] = []

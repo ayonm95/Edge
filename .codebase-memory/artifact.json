@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "785c33eee4145482e8fdcd531df5f8943c085540",
-    "indexed_at": "2026-11-03T07:40:50Z",
+    "commit": "64431e49636234708033fadbcd59eb41e411b1e0",
+    "indexed_at": "2026-11-03T07:54:56Z",
     "project": "Users-ayon-Downloads-all-projects-Edge",
-    "nodes": 1185,
-    "edges": 6074,
-    "original_size": 8192000,
-    "compressed_size": 1223638,
+    "nodes": 1199,
+    "edges": 6143,
+    "original_size": 8257536,
+    "compressed_size": 1236806,
     "compression_level": 3
 }

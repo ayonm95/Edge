@@ -223,9 +223,10 @@ public final class EdgeAppCoordinator: NSObject, EdgeGestureEngineDelegate, Mult
         let prefs = preferencesHolder.get()
         guard prefs.isEnabled else { return }
 
-        // Live preview updates when Settings window is open
-        Task { @MainActor in
-            if TouchPreviewState.shared.isActive {
+        // Live preview updates ONLY when Settings window is open.
+        // Fast synchronous check eliminates 120 heap Tasks per second during normal trackpad usage!
+        if TouchPreviewState.isLivePreviewActive {
+            Task { @MainActor in
                 let points = touches.map {
                     (
                         id: Int($0.fingerID),

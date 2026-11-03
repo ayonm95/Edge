@@ -430,11 +430,11 @@ public final class AudioController: AudioControlling, @unchecked Sendable {
         if status == noErr && deviceID != oldDeviceID && deviceID != 0 {
             teardownDeviceListeners(for: oldDeviceID)
             setupDeviceListeners(for: deviceID)
-            syncFromHardware(deviceID: deviceID, force: true)
+            syncFromHardware(deviceID: deviceID, force: true, notifyListener: oldDeviceID != 0)
         }
     }
 
-    private func syncFromHardware(deviceID: AudioDeviceID, force: Bool = false) {
+    private func syncFromHardware(deviceID: AudioDeviceID, force: Bool = false, notifyListener: Bool = true) {
         guard deviceID != 0 else { return }
 
         if !force && AudioController.isProgrammaticSuppressed() {
@@ -479,7 +479,7 @@ public final class AudioController: AudioControlling, @unchecked Sendable {
         lock.lock()
         let curVol = cachedMuted ? 0.0 : cachedVolume
         let curMuted = cachedMuted
-        let listener = self.volumeListener
+        let listener = notifyListener ? self.volumeListener : nil
         lock.unlock()
 
         listener?(curVol, curMuted)

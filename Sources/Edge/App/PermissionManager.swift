@@ -49,6 +49,9 @@ public final class PermissionManager: ObservableObject {
     public func startPolling(interval: TimeInterval = 1.0) {
         stopPolling()
         refreshTrust()
+        // Battery optimization: If already trusted, do not run background timer
+        guard !isTrusted else { return }
+
         pollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refreshTrust()
@@ -62,12 +65,21 @@ public final class PermissionManager: ObservableObject {
         pollTimer = nil
     }
 
+    /// Indicates whether background polling is actively running.
+    public var isPolling: Bool {
+        return pollTimer != nil
+    }
+
     /// Refreshes the cached trust status and notifies observers if it changed.
     public func refreshTrust() {
         let currentlyTrusted = Self.checkIsTrusted()
         if currentlyTrusted != isTrusted {
             isTrusted = currentlyTrusted
             onTrustChanged?(currentlyTrusted)
+        }
+        // As soon as permission is granted, stop polling immediately to conserve CPU cycles & battery
+        if currentlyTrusted {
+            stopPolling()
         }
     }
 

@@ -64,7 +64,11 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
     }
 
     public func windowWillClose(_ notification: Notification) {
-        // Stop high-frequency onboarding polling if running
-        PermissionManager.shared.startPolling(interval: 2.0)
+        // Battery optimization: Stop polling if trusted; only poll with relaxed interval if untrusted
+        if PermissionManager.shared.isTrusted {
+            PermissionManager.shared.stopPolling()
+        } else {
+            PermissionManager.shared.startPolling(interval: 5.0)
+        }
     }
 }

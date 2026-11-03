@@ -178,7 +178,9 @@ public struct OnboardingView: View {
         .padding(28)
         .frame(width: 480)
         .onAppear {
-            permissionManager.startPolling(interval: 0.8)
+            if !permissionManager.isTrusted {
+                permissionManager.startPolling(interval: 0.8)
+            }
         }
     }
 }

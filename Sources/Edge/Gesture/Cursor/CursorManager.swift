@@ -125,6 +125,14 @@ public final class CursorManager: CursorControlling, @unchecked Sendable {
         return _eventTapPort != nil
     }
 
+    /// Indicates whether the low-level CGEventTap is currently actively enabled by WindowServer.
+    public var isEventTapEnabled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let tap = _eventTapPort else { return false }
+        return CGEvent.tapIsEnabled(tap: tap)
+    }
+
     /// Freezes the cursor at the specified coordinates.
     ///
     /// Idempotent: Calling `freezeCursor` when already frozen updates the anchor
@@ -160,6 +168,9 @@ public final class CursorManager: CursorControlling, @unchecked Sendable {
         _screenWarpPoint = screenPoint
 
         ensureEventTapInstalledLocked()
+        if let tap = _eventTapPort {
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
         lock.unlock()
 
         // Layer 1: Hide cursor globally across all displays
@@ -185,6 +196,12 @@ public final class CursorManager: CursorControlling, @unchecked Sendable {
         let warpLoc = _screenWarpPoint
         _anchorPoint = nil
         _screenWarpPoint = nil
+
+        // Battery optimization: Disable event tap while not frozen to prevent
+        // intercepting hundreds of thousands of mouse moves and waking the CPU.
+        if let tap = _eventTapPort {
+            CGEvent.tapEnable(tap: tap, enable: false)
+        }
         lock.unlock()
 
         // Layer 2: Final warp back to anchor location
@@ -283,7 +300,8 @@ public final class CursorManager: CursorControlling, @unchecked Sendable {
         }
 
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
+        // Enable only if currently frozen, otherwise keep disabled to conserve battery and avoid IPC
+        CGEvent.tapEnable(tap: tap, enable: _isFrozen)
 
         CursorTapRegistry.lock.lock()
         CursorTapRegistry.activeManager = self

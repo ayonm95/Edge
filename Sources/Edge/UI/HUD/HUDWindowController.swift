@@ -91,7 +91,7 @@ public final class HUDWindowController: NSWindowController {
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = 0.0
         } completionHandler: { [weak self, weak panel] in
-            Task { @MainActor [weak self, weak panel] in
+            MainActor.assumeIsolated {
                 guard let self = self, let panel = panel else { return }
                 guard self.fadeToken == capturedToken else {
                     // Animation was interrupted by a new show() or fadeOut(): keep visible
