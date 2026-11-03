@@ -30,4 +30,11 @@ public final class EdgeAppDelegate: NSObject, NSApplicationDelegate {
         // Edge is a menu bar utility — closing settings/onboarding windows must NOT quit the app!
         return false
     }
+
+    public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Re-opening Edge (e.g. from Finder, Spotlight, or Dock) displays the Settings window,
+        // which is crucial if the menu bar icon is hidden!
+        SettingsWindowController.shared.show()
+        return true
+    }
 }

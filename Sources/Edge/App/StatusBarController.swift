@@ -82,6 +82,7 @@ public final class StatusBarController: NSObject, NSMenuDelegate {
 
         button.toolTip = "Edge — Trackpad Edge Controller"
         button.imagePosition = .imageOnly
+        statusItem.isVisible = Preferences.shared.showMenuBarIcon
     }
 
     private func setupMenu() {
@@ -179,6 +180,16 @@ public final class StatusBarController: NSObject, NSMenuDelegate {
 
         applyIconState(calculatedState)
         refreshMenuItems()
+    }
+
+    /// Controls visibility of the status bar item in the macOS menu bar.
+    public func setVisible(_ visible: Bool) {
+        statusItem.isVisible = visible
+    }
+
+    /// Whether the status bar item is currently visible.
+    public var isVisible: Bool {
+        return statusItem.isVisible
     }
 
     /// Sets whether an edge slide gesture is actively engaged.

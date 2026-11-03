@@ -168,15 +168,18 @@ public final class AudioController: AudioControlling, @unchecked Sendable {
         }
         notifyMuted = self.cachedMuted
         listenerToNotify = self.volumeListener
-
-        // Synchronously write to hardware HAL
-        if deviceID != 0 {
-            if unmutedTriggered {
-                self.writeMuteToHardware(deviceID: deviceID, muted: false)
-            }
-            self.writeVolumeToHardware(deviceID: deviceID, volume: clamped)
-        }
         lock.unlock()
+
+        // Asynchronously dispatch hardware HAL write to avoid blocking 120Hz gesture loop
+        if deviceID != 0 {
+            halQueue.async { [weak self] in
+                guard let self = self else { return }
+                if unmutedTriggered {
+                    self.writeMuteToHardware(deviceID: deviceID, muted: false)
+                }
+                self.writeVolumeToHardware(deviceID: deviceID, volume: clamped)
+            }
+        }
 
         // Notify listener
         listenerToNotify?(clamped, notifyMuted)
@@ -241,15 +244,19 @@ public final class AudioController: AudioControlling, @unchecked Sendable {
             cachedVolume = 0.0
         }
 
-        if deviceID != 0 {
-            self.writeMuteToHardware(deviceID: deviceID, muted: newMuted)
-            if !newMuted {
-                self.writeVolumeToHardware(deviceID: deviceID, volume: targetVolume)
-            }
-        }
-
         listenerToNotify = self.volumeListener
         lock.unlock()
+
+        // Asynchronously dispatch hardware HAL write to avoid blocking callers
+        if deviceID != 0 {
+            halQueue.async { [weak self] in
+                guard let self = self else { return }
+                self.writeMuteToHardware(deviceID: deviceID, muted: newMuted)
+                if !newMuted {
+                    self.writeVolumeToHardware(deviceID: deviceID, volume: targetVolume)
+                }
+            }
+        }
 
         listenerToNotify?(targetVolume, newMuted)
 

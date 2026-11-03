@@ -349,6 +349,20 @@ struct GeneralTab: View {
                     .foregroundColor(.secondary)
             }
 
+            Divider()
+
+            // Menu Bar Visibility
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Menu Bar")
+                    .font(.headline)
+
+                Toggle("Show Menu Bar Icon", isOn: $preferences.showMenuBarIcon)
+
+                Text("When disabled, the menu bar icon is hidden. To access Settings again, reopen Edge from Applications or Spotlight.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             Spacer()
         }
         .padding(.horizontal, 8)

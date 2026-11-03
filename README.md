@@ -29,6 +29,8 @@ Built in 100% pure Swift & SwiftUI with zero third-party framework dependencies.
 - **Interactive Trackpad Visualizer:** Live SwiftUI Settings panel displays real-time trackpad touch points and zone boundaries as you touch the glass.
 - **Magic Mouse Support:** Optionally enable or isolate external Magic Mouse touch events.
 - **Zero-Footprint Menu Bar Utility:** Operates as a background agent (`LSUIElement = true`) with dynamic status icons (`idle`, `tracking`, `paused`, `warning`), uses near-zero CPU and memory at idle, and supports **Open at Login** (`SMAppService`).
+- **Hide Menu Bar Icon Option:** Easily toggle menu bar icon visibility in Settings (`General -> Menu Bar`) for an ultra-minimalist, distraction-free desktop. When hidden, simply open Edge from Applications or Spotlight to access Settings.
+- **Ultra-Responsive 120Hz CoreAudio HAL Pipeline:** Volume adjustments feature non-blocking asynchronous CoreAudio dispatch and intelligent corner-to-slide transition, ensuring silky smooth response with zero dropped frames.
 
 ---
 

@@ -111,6 +111,9 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
     /// Enables haptic feedback clicks during step transitions.
     public var enableHaptics: Bool
 
+    /// Controls whether the status bar icon is shown in the macOS menu bar.
+    public var showMenuBarIcon: Bool
+
     /// Default configuration matching the project specification.
     public static let `default` = PreferencesSnapshot(
         isEnabled: true,
@@ -122,7 +125,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         preciseSliding: false,
         enableMagicMouse: false,
         showOSD: true,
-        enableHaptics: true
+        enableHaptics: true,
+        showMenuBarIcon: true
     )
 
     /// Designated memberwise initializer with automated value clamping.
@@ -136,7 +140,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         preciseSliding: Bool = false,
         enableMagicMouse: Bool = false,
         showOSD: Bool = true,
-        enableHaptics: Bool = true
+        enableHaptics: Bool = true,
+        showMenuBarIcon: Bool = true
     ) {
         self.isEnabled = isEnabled
         self.swapSides = swapSides
@@ -148,6 +153,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         self.enableMagicMouse = enableMagicMouse
         self.showOSD = showOSD
         self.enableHaptics = enableHaptics
+        self.showMenuBarIcon = showMenuBarIcon
     }
 
     // MARK: - Compatibility Accessors
@@ -200,6 +206,7 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         case showOSDHUD
         case enableHaptics
         case hapticFeedbackEnabled
+        case showMenuBarIcon
     }
 
     public init(from decoder: Decoder) throws {
@@ -237,6 +244,8 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         self.enableHaptics = try container.decodeIfPresent(Bool.self, forKey: .enableHaptics)
             ?? container.decodeIfPresent(Bool.self, forKey: .hapticFeedbackEnabled)
             ?? true
+
+        self.showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -251,5 +260,6 @@ public struct PreferencesSnapshot: Sendable, Codable, Equatable {
         try container.encode(enableMagicMouse, forKey: .enableMagicMouse)
         try container.encode(showOSD, forKey: .showOSD)
         try container.encode(enableHaptics, forKey: .enableHaptics)
+        try container.encode(showMenuBarIcon, forKey: .showMenuBarIcon)
     }
 }

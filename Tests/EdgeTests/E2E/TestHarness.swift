@@ -704,17 +704,27 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
                         // Inward vertical swipe off bottom: reject
                         currentState = .idle
                     }
-                } else if edge == .left || edge == .right {
+                } else if edge == .left || edge == .right || edge == .topRightCorner {
                     // Vertical slide
-                    if abs(dy) > deadzone {
+                    let canSlide: Bool
+                    let effectiveEdge: EdgeLocation
+                    if edge == .topRightCorner {
+                        effectiveEdge = .right
+                        canSlide = (startPoint.y <= preferences.activeArea.maxY) || (preferences.activeArea == .entire)
+                    } else {
+                        effectiveEdge = edge
+                        canSlide = true
+                    }
+
+                    if canSlide && abs(dy) > deadzone {
                         cursorManager?.freezeCursor(at: CGPoint(x: CGFloat(p.x), y: CGFloat(p.y)))
-                        delegate?.handleGestureAction(.gestureStarted(edge: edge))
+                        delegate?.handleGestureAction(.gestureStarted(edge: effectiveEdge))
 
                         let sensitivity = Float(preferences.sensitivity)
                         let precisionFactor: Float = (preferences.preciseSliding || shiftOptionHeld) ? 0.25 : 1.0
                         let scaledDy = dy * sensitivity * precisionFactor
 
-                        let isRight = (edge == .right)
+                        let isRight = (effectiveEdge == .right)
                         let isVolumeTarget = preferences.swapSides ? !isRight : isRight
 
                         if isVolumeTarget {
@@ -734,7 +744,7 @@ public final class SimulatedGestureEngine: @unchecked Sendable {
                             initialHapticStep = currentStep.rounded(.towardZero)
                         }
 
-                        currentState = .sliding(edge: edge, lastPoint: p, accumulatedDelta: scaledDy, lastHapticStep: initialHapticStep)
+                        currentState = .sliding(edge: effectiveEdge, lastPoint: p, accumulatedDelta: scaledDy, lastHapticStep: initialHapticStep)
                     } else if abs(dx) > deadzone * 2 {
                         // Inward horizontal swipe off edge: reject
                         currentState = .idle

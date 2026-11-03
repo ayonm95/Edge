@@ -24,6 +24,7 @@ public final class Preferences: ObservableObject {
         public static let enableMagicMouse = "edge_enableMagicMouse"
         public static let showOSD = "edge_showOSD"
         public static let enableHaptics = "edge_enableHaptics"
+        public static let showMenuBarIcon = "edge_showMenuBarIcon"
     }
 
     private let defaults: UserDefaults
@@ -114,6 +115,14 @@ public final class Preferences: ObservableObject {
         }
     }
 
+    @Published public var showMenuBarIcon: Bool {
+        didSet {
+            defaults.set(showMenuBarIcon, forKey: Keys.showMenuBarIcon)
+            syncSnapshot()
+            StatusBarController.shared.setVisible(showMenuBarIcon)
+        }
+    }
+
     // MARK: - Open at Login (SMAppService Integration)
 
     /// Reflects whether Edge is currently registered to launch automatically at login.
@@ -149,7 +158,8 @@ public final class Preferences: ObservableObject {
             Keys.preciseSliding: false,
             Keys.enableMagicMouse: false,
             Keys.showOSD: true,
-            Keys.enableHaptics: true
+            Keys.enableHaptics: true,
+            Keys.showMenuBarIcon: true
         ])
 
         // 2. Load stored values (or registered defaults)
@@ -170,6 +180,7 @@ public final class Preferences: ObservableObject {
         self.enableMagicMouse = defaults.bool(forKey: Keys.enableMagicMouse)
         self.showOSD = defaults.bool(forKey: Keys.showOSD)
         self.enableHaptics = defaults.bool(forKey: Keys.enableHaptics)
+        self.showMenuBarIcon = defaults.object(forKey: Keys.showMenuBarIcon) as? Bool ?? true
 
         // 3. Update login item status
         refreshLaunchAtLoginStatus()
@@ -192,7 +203,8 @@ public final class Preferences: ObservableObject {
             preciseSliding: preciseSliding,
             enableMagicMouse: enableMagicMouse,
             showOSD: showOSD,
-            enableHaptics: enableHaptics
+            enableHaptics: enableHaptics,
+            showMenuBarIcon: showMenuBarIcon
         )
         holder.set(snapshot)
     }
@@ -215,7 +227,9 @@ public final class Preferences: ObservableObject {
         self.enableMagicMouse = def.enableMagicMouse
         self.showOSD = def.showOSD
         self.enableHaptics = def.enableHaptics
+        self.showMenuBarIcon = def.showMenuBarIcon
         syncSnapshot()
+        StatusBarController.shared.setVisible(showMenuBarIcon)
     }
 
     // MARK: - Login Item Helper Methods

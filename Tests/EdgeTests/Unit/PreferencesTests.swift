@@ -33,6 +33,7 @@ struct PreferencesTests {
         #expect(!snapshot.enableMagicMouse)
         #expect(snapshot.showOSD)
         #expect(snapshot.enableHaptics)
+        #expect(snapshot.showMenuBarIcon)
 
         // Compatibility aliases
         #expect(abs(snapshot.edgeWidthFraction - 0.08) < 0.0001)
@@ -281,6 +282,7 @@ struct PreferencesTests {
         prefs.enableMagicMouse = true
         prefs.showOSD = false
         prefs.enableHaptics = false
+        prefs.showMenuBarIcon = false
 
         // 1. Verify UserDefaults persistence
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.swapSides) == true)
@@ -292,6 +294,7 @@ struct PreferencesTests {
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.enableMagicMouse) == true)
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.showOSD) == false)
         #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.enableHaptics) == false)
+        #expect(testDefaults.bool(forKey: Edge.Preferences.Keys.showMenuBarIcon) == false)
 
         // 2. Verify Atomic snapshot synchronization
         let snapshot = holder.get()
@@ -304,6 +307,7 @@ struct PreferencesTests {
         #expect(snapshot.enableMagicMouse == true)
         #expect(snapshot.showOSD == false)
         #expect(snapshot.enableHaptics == false)
+        #expect(snapshot.showMenuBarIcon == false)
     }
 
     @Test("Preferences clamping on property setters")
