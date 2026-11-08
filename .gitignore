@@ -6,3 +6,8 @@ xcuserdata/
 DerivedData/
 .DS_Store
 .agents/
+node_modules/
+scripts/node_modules/
+showcase/frames/
+showcase/reference/
+

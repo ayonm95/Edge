@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge for macOS — 3D Cinematic Showcase & Gesture Simulator</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="viewport-container">
+    <!-- Stage: switchable between mode-vertical (9:16) and mode-landscape (16:9) -->
+    <div id="stage" class="mode-vertical">
+      <!-- Three.js Canvas -->
+      <canvas id="webgl-canvas"></canvas>
+
+      <!-- Glass UI Overlay Layer -->
+      <div id="ui-overlay">
+        <!-- Top Persistent Hook (Reel Style) -->
+        <div class="hook-container">
+          <div class="hook-badge">
+            <span class="pulse-dot"></span>
+            Edge for macOS
+          </div>
+          <h1 class="hook-title">
+            This app turns your MacBook trackpad into physical <span class="highlight-orange">brightness</span> & <span class="highlight-blue">volume</span> sliders
+          </h1>
+        </div>
+
+        <!-- Floating Gesture Tooltip Pill -->
+        <div class="gesture-indicator-pill">
+          <span class="pill-icon">✌️</span>
+          <span class="pill-text">2-Finger Slide Left Edge</span>
+        </div>
+
+        <!-- macOS Sonoma Liquid Glass Brightness HUD -->
+        <div id="hud-brightness" class="macos-hud">
+          <div class="hud-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+          </div>
+          <div class="hud-slider-track">
+            <div class="hud-slider-fill" style="width: 75%;"></div>
+          </div>
+          <div class="hud-value-label">75%</div>
+        </div>
+
+        <!-- macOS Sonoma Liquid Glass Volume HUD -->
+        <div id="hud-volume" class="macos-hud">
+          <div class="hud-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="hud-slider-track">
+            <div class="hud-slider-fill" style="width: 80%; background: #0A84FF;"></div>
+          </div>
+          <div class="hud-value-label">80%</div>
+        </div>
+
+        <!-- macOS Sonoma Liquid Glass Media HUD -->
+        <div id="hud-media" class="macos-media-hud">
+          <div class="media-artwork">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <div class="media-info">
+            <div class="media-title">The Last Goodbye</div>
+            <div class="media-artist">ODESZA</div>
+          </div>
+          <div class="media-controls-badge">Next Track ⏭</div>
+        </div>
+
+        <!-- macOS Menu Bar Dropdown Simulation (Act 2) -->
+        <div class="menubar-dropdown">
+          <div class="dropdown-header">
+            <div class="dropdown-app-identity">
+              <div class="dropdown-logo-icon">E</div>
+              <div class="dropdown-title">Edge</div>
+            </div>
+            <div class="dropdown-status-pill">
+              <span class="dot"></span>
+              Ready
+            </div>
+          </div>
+
+          <div class="dropdown-row">
+            <span class="row-label">Brightness</span>
+            <span class="row-val">88%</span>
+          </div>
+
+          <div class="dropdown-row">
+            <span class="row-label">Volume</span>
+            <span class="row-val">82%</span>
+          </div>
+
+          <div class="dropdown-row">
+            <span class="row-label">Two-Finger Gesture Requirement</span>
+            <div class="dropdown-switch"></div>
+          </div>
+
+          <div class="dropdown-row">
+            <span class="row-label">Haptic Feedback (Taptic Engine)</span>
+            <div class="dropdown-switch"></div>
+          </div>
+
+          <div class="dropdown-row">
+            <span class="row-label">Quick Mute (Top-Right Double Tap)</span>
+            <div class="dropdown-switch"></div>
+          </div>
+
+          <div class="dropdown-row">
+            <span class="row-label">Hide Menu Bar Icon</span>
+            <div class="dropdown-switch" style="background: rgba(255,255,255,0.2);"></div>
+          </div>
+
+          <div class="dropdown-battery-badge">
+            <span class="row-label" style="font-size: 11px;">Efficiency Profile</span>
+            <span class="battery-tag">⚡️ 0.0% Idle CPU (Gated)</span>
+          </div>
+        </div>
+
+        <!-- Social Proof Reddit Stack (Act 3) -->
+        <div class="social-proof-stack">
+          <div class="social-card">
+            <div class="social-card-user">
+              <div class="reddit-icon">r</div>
+              <span>u/Federal-Translator60 • r/macapps</span>
+            </div>
+            <div class="social-card-body">
+              "This app is freaking amazing! The <span class="social-card-highlight">two-finger swipe</span> completely eliminated accidental triggers while typing."
+            </div>
+          </div>
+
+          <div class="social-card">
+            <div class="social-card-user">
+              <div class="reddit-icon">r</div>
+              <span>u/BackFront2710 • r/macapps</span>
+            </div>
+            <div class="social-card-body">
+              "Like having an <span class="social-card-highlight">MX Master 3</span> physical scroll wheel built right into my MacBook trackpad. Insane."
+            </div>
+          </div>
+
+          <div class="social-card">
+            <div class="social-card-user">
+              <div class="reddit-icon">r</div>
+              <span>u/laymenng • GitHub</span>
+            </div>
+            <div class="social-card-body">
+              "Best part? <span class="social-card-highlight">100% Free & Open Source</span> with zero battery drain."
+            </div>
+          </div>
+        </div>
+
+        <!-- Call to Action Screen -->
+        <div class="cta-screen">
+          <div class="cta-app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12h16M4 6h16M4 18h16"/>
+            </svg>
+          </div>
+          <h2 class="cta-heading">Edge for macOS</h2>
+          <div class="cta-badge-pill">100% Free & Open Source</div>
+          <p class="cta-desc">
+            Tactile volume, brightness & media hardware controls on your MacBook trackpad.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Player & Control Bar -->
+    <div id="controls-bar">
+      <button class="play-toggle-btn" id="btn-play" title="Play / Pause">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+      </button>
+
+      <div class="time-scrub-wrap">
+        <input type="range" class="time-scrubber" id="time-scrubber" min="0" max="16" step="0.01" value="0">
+        <span class="time-display" id="time-display">0:00 / 0:16</span>
+      </div>
+
+      <div class="ctrl-divider"></div>
+
+      <button class="ctrl-btn active" data-mode="reel">Reel (16s)</button>
+      <button class="ctrl-btn" data-mode="brightness">Brightness</button>
+      <button class="ctrl-btn" data-mode="volume">Volume</button>
+      <button class="ctrl-btn" data-mode="media">Media</button>
+
+      <div class="ctrl-divider"></div>
+
+      <button class="ctrl-btn" id="btn-aspect" title="Toggle 9:16 / 16:9">Aspect: 9:16</button>
+      <button class="ctrl-btn" id="btn-orbit" title="Orbit 3D Model">3D Orbit: Off</button>
+    </div>
+  </div>
+
+  <!-- Vendor Scripts -->
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/OrbitControls.js"></script>
+  <script src="vendor/gsap.min.js"></script>
+
+  <!-- Application Scripts -->
+  <script src="js/scene.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/animations.js"></script>
+
+  <script>
+    // Application Bootstrap & Controller
+    document.addEventListener('DOMContentLoaded', () => {
+      const stage = document.getElementById('stage');
+      const scene = EdgeScene.init(stage);
+      EdgeHUD.init();
+
+      let activeTimeline = EdgeAnimations.initTimeline('reel', scene);
+      let isPlaying = false;
+      let orbitEnabled = false;
+
+      const btnPlay = document.getElementById('btn-play');
+      const scrubber = document.getElementById('time-scrubber');
+      const timeDisplay = document.getElementById('time-display');
+      const btnAspect = document.getElementById('btn-aspect');
+      const btnOrbit = document.getElementById('btn-orbit');
+      const modeButtons = document.querySelectorAll('.ctrl-btn[data-mode]');
+
+      function formatTime(s) {
+        const mins = Math.floor(s / 60);
+        const secs = Math.floor(s % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      function updateScrubber() {
+        if (!activeTimeline) return;
+        const cur = activeTimeline.time();
+        const dur = activeTimeline.duration();
+        scrubber.max = dur;
+        scrubber.value = cur;
+        timeDisplay.textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+
+        if (cur >= dur && isPlaying) {
+          pauseTimeline();
+          activeTimeline.seek(0);
+          updateScrubber();
+        }
+      }
+
+      function playTimeline() {
+        isPlaying = true;
+        activeTimeline.play();
+        btnPlay.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+        gsap.ticker.add(updateScrubber);
+      }
+
+      function pauseTimeline() {
+        isPlaying = false;
+        activeTimeline.pause();
+        btnPlay.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+        gsap.ticker.remove(updateScrubber);
+      }
+
+      btnPlay.addEventListener('click', () => {
+        if (isPlaying) {
+          pauseTimeline();
+        } else {
+          if (activeTimeline.time() >= activeTimeline.duration()) {
+            activeTimeline.seek(0);
+          }
+          playTimeline();
+        }
+      });
+
+      scrubber.addEventListener('input', (e) => {
+        pauseTimeline();
+        const val = parseFloat(e.target.value);
+        activeTimeline.seek(val);
+        updateScrubber();
+      });
+
+      // Switch Modes
+      modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          modeButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const mode = btn.dataset.mode;
+          pauseTimeline();
+          activeTimeline = EdgeAnimations.initTimeline(mode, scene);
+          activeTimeline.seek(0);
+          updateScrubber();
+          playTimeline();
+        });
+      });
+
+      // Aspect Ratio Toggle
+      btnAspect.addEventListener('click', () => {
+        if (stage.classList.contains('mode-vertical')) {
+          stage.classList.remove('mode-vertical');
+          stage.classList.add('mode-landscape');
+          btnAspect.textContent = 'Aspect: 16:9';
+        } else {
+          stage.classList.remove('mode-landscape');
+          stage.classList.add('mode-vertical');
+          btnAspect.textContent = 'Aspect: 9:16';
+        }
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 450);
+      });
+
+      // Orbit Toggle
+      btnOrbit.addEventListener('click', () => {
+        orbitEnabled = !orbitEnabled;
+        scene.enableOrbitControls(orbitEnabled);
+        btnOrbit.classList.toggle('active', orbitEnabled);
+        btnOrbit.textContent = orbitEnabled ? '3D Orbit: On' : '3D Orbit: Off';
+      });
+
+      // Expose globally for deterministic headless video rendering
+      window.__EDGE_SEEK__ = function(timeSeconds) {
+        if (activeTimeline) {
+          activeTimeline.seek(timeSeconds);
+        }
+      };
+
+      window.__EDGE_SET_MODE__ = function(mode) {
+        pauseTimeline();
+        activeTimeline = EdgeAnimations.initTimeline(mode, scene);
+        activeTimeline.seek(0);
+        updateScrubber();
+        return activeTimeline.duration();
+      };
+
+      // Autoplay initial reel
+      updateScrubber();
+      playTimeline();
+    });
+  </script>
+</body>
+</html>

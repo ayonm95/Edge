@@ -10,6 +10,26 @@ Built in 100% pure Swift & SwiftUI with zero third-party framework dependencies.
 
 ---
 
+## 3D Cinematic Visual Showcase
+
+Edge includes a photorealistic 3D interactive simulator and high-converting video suite reverse-engineered from viral trackpad concept demonstrations, rendered at 60 FPS with Apple Keynote aesthetics:
+
+| Viral Concept Reel (9:16) | Left Edge: Brightness (16:9) | Right Edge: Volume & Haptics (16:9) |
+| :---: | :---: | :---: |
+| [![Edge Concept Reel](showcase/poster_reel.jpg)](showcase/videos/edge_concept_reel_1080x1920.mp4) | [![Brightness Demo](showcase/poster_brightness.jpg)](showcase/videos/edge_brightness_gesture_3d.mp4) | [![Volume Demo](showcase/poster_volume.jpg)](showcase/videos/edge_volume_gesture_3d.mp4) |
+| [▶ Watch Reel (1080×1920)](showcase/videos/edge_concept_reel_1080x1920.mp4) | [▶ Watch Brightness (1080p)](showcase/videos/edge_brightness_gesture_3d.mp4) | [▶ Watch Volume (1080p)](showcase/videos/edge_volume_gesture_3d.mp4) |
+
+### Interactive 3D Web Simulator
+Launch the interactive 3D web experience in your browser to inspect the MacBook unibody, glass trackpad, biometric touch pucks, and liquid-glass HUD overlays with full 360° orbit controls:
+```bash
+open showcase/index.html
+```
+- **Switch Views:** Toggle between 9:16 Vertical Reel (Instagram/TikTok format) and 16:9 Landscape Widescreen.
+- **Gesture Selector:** Play dedicated animations for Brightness, Volume & Haptics, Bottom Media Strip, or the full 16-second Master Concept Reel.
+- **Interactive Orbit:** Rotate, pan, and zoom around the 3D model in real-time.
+
+---
+
 ## Features
 
 - **Two-Finger Edge Sliding:**
@@ -120,14 +140,21 @@ open build/Edge.app
 
 ## Automated Test Suite
 
-Edge includes an extensive, 4-tier opaque-box test harness with synthetic multitouch frame injectors and hardware controller test doubles:
-- **Tier 1:** Baseline Feature Tests (165 tests)
-- **Tier 2:** Boundary & Corner Tests (35 tests)
-- **Tier 3:** Cross-Feature Combinations & Concurrency Tests (10 tests)
-- **Tier 4:** Real-World Usage Scenarios (7 tests)
-- **Unit Suites:** Hardware, Preferences, Multitouch Bridge, Geometry, Cursor & Haptics, Status Bar (68 tests)
+Edge includes an extensive, 12-suite opaque-box test harness with synthetic multitouch frame injectors and hardware controller test doubles:
+- **Baseline Feature Tests** (165 tests)
+- **Boundary & Corner Tests** (35 tests)
+- **Hardware & HUD Unit Tests** (21 tests)
+- **Gesture Engine Unit Tests** (15 tests)
+- **Multitouch Subsystem & Bridge Unit Tests** (14 tests)
+- **Combination & Concurrency Tests** (10 tests)
+- **Real-World Usage Scenarios** (7 tests)
+- **Battery Efficiency & Low-Power Tests** (6 tests)
+- **Preferences Unit Tests** (6 tests)
+- **Trackpad Geometry Unit Tests** (6 tests)
+- **Cursor & Haptics Unit Tests** (4 tests)
+- **StatusBarController Unit Tests** (4 tests)
 
-**Total:** **285 automated tests passing with 100% success rate (0 failures).**
+**Total:** **293 automated tests passing with 100% success rate (0 failures).**
 
 Run the full test suite anytime:
 ```bash
